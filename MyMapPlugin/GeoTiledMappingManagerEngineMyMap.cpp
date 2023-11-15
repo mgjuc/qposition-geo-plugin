@@ -5,8 +5,39 @@
 #include <QtLocation/private/qgeomaptype_p.h>
 #include <QtLocation/private/qgeotiledmap_p.h>
 #include <QtLocation/private/qgeofiletilecache_p.h>
+#include <QFile>
+#include <QDir>
 
 QT_BEGIN_NAMESPACE
+//删除文件夹(包括文件夹中的文件及目录)
+bool DelDir(const QString &path)
+{
+    if (path.isEmpty()){
+        return true;
+    }
+
+    QDir dir(path);
+    if (!dir.exists()){
+        dir.mkdir(dir.absolutePath());
+        return true;
+    }
+
+    dir.setFilter(QDir::AllEntries | QDir::NoDotAndDotDot); //设置过滤
+    QFileInfoList fileList = dir.entryInfoList();			 // 获取所有的文件信息
+    //遍历文件信息
+    foreach(QFileInfo file, fileList)
+    {
+        if (file.isFile()){ // 是文件，删除
+            file.dir().remove(file.fileName());
+        }
+        else{				// 递归删除
+            DelDir(file.absoluteFilePath());
+        }
+    }
+
+//    return dir.rmpath(dir.absolutePath()); // 删除文件夹
+}
+
 GeoTiledMappingManagerEngineMyMap::GeoTiledMappingManagerEngineMyMap(
         const QVariantMap &parameters,
         QGeoServiceProvider::Error *error,
@@ -14,8 +45,8 @@ GeoTiledMappingManagerEngineMyMap::GeoTiledMappingManagerEngineMyMap(
 {
     //地图视角相关设置，对应到 QML Map 类型的属性
     QGeoCameraCapabilities camera_caps;
-    camera_caps.setMinimumZoomLevel(0.0);
-    camera_caps.setMaximumZoomLevel(20.0);
+    camera_caps.setMinimumZoomLevel(1.0);
+    camera_caps.setMaximumZoomLevel(6.0);
     camera_caps.setSupportsBearing(true);
     camera_caps.setSupportsTilting(true);
     camera_caps.setMinimumTilt(0);
@@ -26,7 +57,8 @@ GeoTiledMappingManagerEngineMyMap::GeoTiledMappingManagerEngineMyMap(
     setCameraCapabilities(camera_caps);
 
     //瓦片大小
-    setTileSize(QSize(256, 256));
+//    setTileSize(QSize(256, 256));
+    setTileSize(QSize(512,512));
 
     //瓦片获取，默认接口是通过网络请求获取
     //parameters 就是QML中设置的 PluginParameter
@@ -36,11 +68,17 @@ GeoTiledMappingManagerEngineMyMap::GeoTiledMappingManagerEngineMyMap(
     //瓦片缓存-这部分参考QtLocation的esri部分源码
     //如果没有用QGeoFileTileCache，默认加载地缓存不会释放，详情需分析他的源码
     QString cache_dir;
-    if(parameters.contains("mapPath")){
-        cache_dir = parameters.value("mapPath").toString() + QString("/mymapCache");
-    }else{
+//    if(parameters.contains("mapPath")){
+//        cache_dir = parameters.value("mapPath").toString() + QString("/mymapCache");
+//    }else{
         cache_dir = QAbstractGeoTileCache::baseLocationCacheDirectory() + QString("mymapCache");
+//    }
+    if(DelDir(cache_dir)){
+        qDebug()<<QString("缓存已清空");
+    }else{
+        qDebug()<<QString("清除缓存失败");
     }
+    qDebug()<<cache_dir;
     //todo 自定义QGeoFileTileCache
     QGeoFileTileCache *tile_cache = new QGeoFileTileCache(cache_dir,this);
     //Disk cache setup -- defaults to ByteSize (old behavior)

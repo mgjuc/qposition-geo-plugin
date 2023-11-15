@@ -1,6 +1,7 @@
 #pragma once
 #include <QtLocation/private/qgeotilefetcher_p.h>
 #include <QNetworkAccessManager>
+#include <QJsonObject>
 
 QT_BEGIN_NAMESPACE
 
@@ -23,10 +24,12 @@ public:
 private:
     QGeoTiledMapReply* getTileImage(const QGeoTileSpec &spec) override;
     QString getUrl(const QGeoTileSpec &spec) const;
-
+    void getTileXY(int z, int &x, int &y) const;
 private:
     QString mapUrl;
     QString format{"png"};
     QNetworkAccessManager* networkManager;
+    QJsonObject* info = nullptr;
+    void getTielInfo(int z, int &x, int &y) const;
 };
 QT_END_NAMESPACE

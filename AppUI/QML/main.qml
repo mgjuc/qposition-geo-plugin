@@ -14,10 +14,10 @@ Window {
     Map {
         id: the_map
         anchors.fill: parent
-        minimumZoomLevel: 3
-        maximumZoomLevel: 16
-        zoomLevel: 10
-        center: QtPositioning.coordinate(30.67, 104.06)
+        minimumZoomLevel: 1
+        maximumZoomLevel: 3
+        zoomLevel: 3
+        center: QtPositioning.coordinate(0, 0) //178.594129933 , 0.1257984614
 
         plugin: Plugin {
             name: "mymap" //"esri" "mapbox" "osm" "here"
@@ -25,7 +25,9 @@ Window {
             //传递给插件的参数
             PluginParameter {
                 name: "mapPath"
-                value: applicationDirPath+"/dianzi_gaode_ArcgisServerTiles/_alllayers"
+//                value: applicationDirPath+"/dianzi_gaode_ArcgisServerTiles/_alllayers"
+//                value: applicationDirPath+"/Layers/_alllayers"
+                value: "http://10.1.2.200:5010/asex/TiledMap/2023070401/Layers/_alllayers"
             }
 
             PluginParameter {
