@@ -1,8 +1,4 @@
-# Warning (2021-7-4)
-
-The old code branches in v1.0.0. Currently refactoring...
-
-旧版代码在v1.0.0分支，当前正在重构中...
+# Fork from [https://github.com/gongjianbo/MyQtLocation](https://github.com/gongjianbo/MyQtLocation)
 
 # MyQtLocation
 
