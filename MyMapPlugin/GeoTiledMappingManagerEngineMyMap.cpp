@@ -45,8 +45,8 @@ GeoTiledMappingManagerEngineMyMap::GeoTiledMappingManagerEngineMyMap(
 {
     //地图视角相关设置，对应到 QML Map 类型的属性
     QGeoCameraCapabilities camera_caps;
-    camera_caps.setMinimumZoomLevel(1.0);
-    camera_caps.setMaximumZoomLevel(6.0);
+    camera_caps.setMinimumZoomLevel(0.0);
+    camera_caps.setMaximumZoomLevel(18.0);
     camera_caps.setSupportsBearing(true);
     camera_caps.setSupportsTilting(true);
     camera_caps.setMinimumTilt(0);
@@ -57,7 +57,6 @@ GeoTiledMappingManagerEngineMyMap::GeoTiledMappingManagerEngineMyMap(
     setCameraCapabilities(camera_caps);
 
     //瓦片大小
-//    setTileSize(QSize(256, 256));
     setTileSize(QSize(512,512));
 
     //瓦片获取，默认接口是通过网络请求获取

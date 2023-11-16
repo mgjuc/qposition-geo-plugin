@@ -9,13 +9,13 @@ Window {
     visible: true
     width: 640
     height: 480
-    title: qsTr("My Qt Location (by: 龚建波)")
+    title: qsTr("My Qt Location")
 
     Map {
         id: the_map
         anchors.fill: parent
-        minimumZoomLevel: 1
-        maximumZoomLevel: 3
+        minimumZoomLevel: 0
+        maximumZoomLevel: 7
         zoomLevel: 3
         center: QtPositioning.coordinate(0, 0) //178.594129933 , 0.1257984614
 

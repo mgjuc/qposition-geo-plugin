@@ -23,13 +23,13 @@ public:
 
 private:
     QGeoTiledMapReply* getTileImage(const QGeoTileSpec &spec) override;
-    QString getUrl(const QGeoTileSpec &spec) const;
-    void getTileXY(int z, int &x, int &y) const;
+    QString getUrl(const QGeoTileSpec &spec);
+    void getTileXY(int z, int &x, int &y);
 private:
     QString mapUrl;
     QString format{"png"};
     QNetworkAccessManager* networkManager;
-    QJsonObject* info = nullptr;
-    void getTielInfo(int z, int &x, int &y) const;
+    QJsonObject info;
+    void getTielInfo();
 };
 QT_END_NAMESPACE

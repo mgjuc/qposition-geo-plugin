@@ -18,50 +18,50 @@ QT_BEGIN_NAMESPACE
  * @param x
  * @param y
  */
-void GeoTileFetcherMyMap::getTileXY(int z, int &x, int &y) const
+void GeoTileFetcherMyMap::getTileXY(int z, int &x, int &y)
 {
-    if(info == nullptr){
-        getTielInfo(z, x, y);
+    if(info.empty()){
+        getTielInfo();
         return;
     }
-    double originX,originY,xMin,yMax, resolution[8];
-    int size;
-    QJsonValue dataValue = info->value("data");
+    double xMin,yMax, resolution[8];
+    int size,originX,originY;
+    QJsonValue dataValue = info.value("data");
     if(dataValue.type() != QJsonValue::Object || dataValue.isNull()) {
         qDebug()<<"解析Tileinfo失败";
         return;
     }
     QJsonObject dataObj = dataValue.toObject();
     QJsonValue originXValue = dataObj.value("originX");
-    originX = originXValue.toDouble();
+    originX = originXValue.toString().toDouble();
     QJsonValue originYValue = dataObj.value("originY");
-    originY = originYValue.toDouble();
+    originY = originYValue.toString().toDouble();
     QJsonValue sizeValue = dataObj.value("size");
-    size = sizeValue.toInt();
+    size = sizeValue.toString().toInt();
     QJsonValue xMinValue = dataObj.value("xMin");
-    xMin = xMinValue.toDouble();
+    xMin = xMinValue.toString().toDouble();
     QJsonValue yMaxValue = dataObj.value("yMax");
-    yMax = yMaxValue.toDouble();
+    yMax = yMaxValue.toString().toDouble();
     QJsonValue resolutionValue = dataObj.value("resolution");
     if(resolutionValue.type() == QJsonValue::Array){
         QJsonArray resolutionArr = resolutionValue.toArray();
         for (int i = 0; i < resolutionArr.count(); i++) {
             QJsonValue res = resolutionArr.at(i);
-            resolution[i] = res.toDouble();
+            resolution[i] = res.toString().toDouble();
         }
     }
     //单张瓦片大小 米
     double r = resolution[z] * size;
 
-    x = (originX + xMin) / r;
-    y = (originY - yMax) / r;
+    x += (-originX + xMin) / r;
+    y += (originY - yMax) / r;
 
 
 }
 /**
  * @brief 获取瓦片信息
  */
-void GeoTileFetcherMyMap::getTielInfo(int z, int &x, int &y) const{
+void GeoTileFetcherMyMap::getTielInfo(){
     QString infourl = QString("http://10.1.2.200:5010/asex/map/GetTiledMapInfo");
     QNetworkRequest request;
     request.setRawHeader("Accept", "*/*");
@@ -75,26 +75,22 @@ void GeoTileFetcherMyMap::getTielInfo(int z, int &x, int &y) const{
     connect(this, &QObject::destroyed, reply, &QObject::deleteLater);
 
     // 请求错误处理
-    QObject::connect(reply, static_cast<void (QNetworkReply::*)(QNetworkReply::NetworkError)>(&QNetworkReply::error), [&] {
+    connect(reply, static_cast<void (QNetworkReply::*)(QNetworkReply::NetworkError)>(&QNetworkReply::error), [&] {
         qDebug() << reply->errorString();
     });
 
     // 请求结束时删除 reply 释放内存
-    QObject::connect(reply, &QNetworkReply::finished, [&] {
-        if (!reply) {
-            qDebug()<<QString("reply not exist");
-            return;
-        }
+    // lambd表达式时reply必须是值引用
+    connect(reply, &QNetworkReply::finished, [&, reply] {
+//        qDebug()<<"labmda"<<sender()<<reply->url();
         int statuscode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
-        qDebug()<<QString(statuscode);
         QJsonParseError err_rpt;
         QJsonDocument  doc = QJsonDocument::fromJson(reply->readAll(), &err_rpt);
-        if(err_rpt.error == QJsonParseError::NoError || doc.isNull()){
+        if( statuscode != 200 || err_rpt.error != QJsonParseError::NoError || doc.isNull()){
             qDebug() << "JSON格式错误";
             return;
         }
-        *info = doc.object();
-//        getTileXY(z, x, y);
+        info = doc.object();
         reply->deleteLater();
     });
 }
@@ -124,21 +120,17 @@ QGeoTiledMapReply *GeoTileFetcherMyMap::getTileImage(const QGeoTileSpec &spec)
     //request.setHeader(QNetworkRequest::UserAgentHeader, _userAgent);
     request.setRawHeader("MineId", "0");
     request.setUrl(getUrl(spec));
-    qDebug()<< "xyz="<<spec.x()<< spec.y()<<spec.zoom();
+//    qDebug()<< "xyz="<<spec.x()<< spec.y()<<spec.zoom();
     qDebug()<<"GeoTileFetcherMyMap::getTileImage"<<request.url();
 
     QNetworkReply *reply = networkManager->get(request);
     return new GeoTiledMapReplyMyMap(reply, spec, format);
 }
 
-QString GeoTileFetcherMyMap::getUrl(const QGeoTileSpec &spec) const
+QString GeoTileFetcherMyMap::getUrl(const QGeoTileSpec &spec)
 {
     //其实小写也可以，一般系统默认是不区分大小写的
     //用的arcgis 瓦片命名格式
-    //L1 0x907 0xd9e
-    //L2 0x120e 0x1b3d
-    //L3 0x241d 0x367a
-    //L6 0x120ee 0x1b3d4
     int x = spec.x(), y=spec.y();
 
     getTileXY(spec.zoom(), x, y);
